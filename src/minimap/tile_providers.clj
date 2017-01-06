@@ -40,5 +40,19 @@
 (def cartodb-light
   (->URLTileProvider "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"))
 
-(defmulti get-provider identity)
-(defmethod get-provider "cartodb-light" [_] cartodb-light)
+(def cartodb-dark
+  (->URLTileProvider "https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"))
+
+(def open-street-map
+  (->URLTileProvider "http://{s}.tile.osm.org/{z}/{x}/{y}.png"))
+
+(defonce providers (atom {}))
+(defn add-provider! [k provider]
+  (swap! providers assoc k provider))
+(defn get-provider [k] (get @providers k))
+(defn get-providers [] (keys @providers))
+
+(add-provider! "cartodb-light" cartodb-light)
+(add-provider! "cartodb-dark" cartodb-dark)
+(add-provider! "open-street-map" open-street-map)
+(add-provider! "osm" open-street-map)
