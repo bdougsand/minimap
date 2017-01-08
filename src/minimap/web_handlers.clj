@@ -32,12 +32,13 @@
 
 
 (defapi bounds-handler ::api/bounds-request
-  [{{:keys [tile-provider sw-lat sw-lng ne-lat ne-lng]} :params}]
+  [{{:keys [clip tile-provider sw-lat sw-lng ne-lat ne-lng]} :params}]
   (if-let [prov (tiles/get-provider tile-provider)]
     (image-response
      (make-bounded-image prov
-                          (Float/parseFloat sw-lat) (Float/parseFloat sw-lng)
-                          (Float/parseFloat ne-lat) (Float/parseFloat ne-lng)))
+                         (Float/parseFloat sw-lat) (Float/parseFloat sw-lng)
+                         (Float/parseFloat ne-lat) (Float/parseFloat ne-lng)
+                         clip))
     {:status 400
      :body (str "Valid options for tile-provider are: " (str/join ", " (tiles/get-providers)))}))
 

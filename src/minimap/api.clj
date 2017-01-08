@@ -18,7 +18,8 @@
           :opt-un [::zoom]))
 
 (s/def ::bounds-request
-  (s/keys :req-un [::tile-provider ::sw-lat ::sw-lng ::ne-lat ::ne-lng]))
+  (s/keys :req-un [::tile-provider ::sw-lat ::sw-lng ::ne-lat ::ne-lng]
+          :opt-un [::clip]))
 
 
 (defn explain-pred [pred]

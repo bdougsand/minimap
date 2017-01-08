@@ -8,7 +8,6 @@
    JAR. Run it behind a caching proxy.
 
 ** To Do
-*** Clip to region
 *** Draw geometry
 *** Allow the dimensions of the output image to be specified
 *** Retina support
