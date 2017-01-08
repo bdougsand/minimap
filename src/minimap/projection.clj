@@ -46,9 +46,3 @@
   ([lat lng zoom]
    (lat-lng-to-point web-mercator lat lng zoom)))
 
-
-(defn pixel-bounds [lat lng zoom l]
-  (let [[x y] (lat-lng-to-point lat lng zoom)
-        x (Math/floor x)
-        y (Math/floor y)]
-    [[(- x )]]))

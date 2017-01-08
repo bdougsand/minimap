@@ -8,10 +8,17 @@
 (s/def ::tile-provider string?)
 (s/def ::lat (s/and ::float-str #(<= -90 (Float/parseFloat %) 90)))
 (s/def ::lng (s/and ::float-str #(<= -180 (Float/parseFloat %) 190)))
+(s/def ::ne-lat ::lat)
+(s/def ::sw-lat ::lat)
+(s/def ::ne-lng ::lng)
+(s/def ::sw-lng ::lng)
 
 (s/def ::map-request
   (s/keys :req-un [::tile-provider ::lat ::lng]
           :opt-un [::zoom]))
+
+(s/def ::bounds-request
+  (s/keys :req-un [::tile-provider ::sw-lat ::sw-lng ::ne-lat ::ne-lng]))
 
 
 (defn explain-pred [pred]

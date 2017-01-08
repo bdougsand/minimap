@@ -27,6 +27,7 @@
                (int y-offset)])
             (range min-tile-x (inc max-tile-x))))))
 
+
 (defn make-image [provider lat lng zoom]
   (let [img (BufferedImage. 256 256 BufferedImage/TYPE_INT_ARGB)
         gfx (.createGraphics img)
@@ -55,3 +56,15 @@
         (.drawImage gfx sub-img nil px py)))
     (.dispose gfx)
     img))
+
+
+(defn make-bounded-image [provider sw-lat sw-lng ne-lat ne-lng]
+  (let [zoom (tiles/find-zoom-for-bounds provider [sw-lat sw-lng] [ne-lat ne-lng] 256)]
+    (make-image provider
+                (+ sw-lat (/ (- ne-lat sw-lat) 2))
+                (+ sw-lng (/ (- ne-lng sw-lng) 2))
+                zoom)))
+
+
+
+
