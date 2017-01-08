@@ -1,0 +1,21 @@
+* Minimap
+
+  A mini webservice for generating mini map images. Pulls tiles from a provider,
+  crops and combines them.
+
+** Usage
+   Use ~lein run~ to start the web service. Use ~lein uberjar~ to generate a
+   JAR. Run it behind a caching proxy.
+
+** To Do
+*** Clip to region
+*** Draw geometry
+*** Allow the dimensions of the output image to be specified
+*** Retina support
+*** Support more projections and tile providers
+
+** License
+
+   Copyright © 2017 Brian Sanders
+
+   Distributed under the MIT License.
