@@ -3,13 +3,29 @@
             [clojure.string :as str]
 
             [minimap.projection :as proj])
-  (:import [javax.imageio ImageIO]))
+  (:import [javax.imageio ImageIO]
+           [java.awt.image BufferedImage]
+           [java.awt Color]))
 
 
 (defprotocol TileProvider
   (get-tile [this x y z])
-  (tile-size [this])
-  (get-projection [this]))
+  (tile-size [this]))
+
+(defrecord DummyTileProvider [color]
+  TileProvider
+  (get-tile [this _ _ _]
+    (let [img (BufferedImage. 256 256 BufferedImage/TYPE_INT_ARGB)]
+      (doto (.createGraphics img)
+        (.setColor color)
+        (.fillRect 0 0 256 256)
+        (.dispose))
+      img))
+
+  (tile-size [this] 256))
+
+(defn dummy-provider []
+  (->DummyTileProvider Color/red))
 
 
 ;; Assign the subdomain to allow caching of URL responses
@@ -29,23 +45,25 @@
         (io/input-stream)
         (ImageIO/read)))
 
-  (tile-size [this] (:tile-size this [256 256]))
-
-  (get-projection [this]
-    (:projection this proj/web-mercator))
+  (tile-size [this] (:tile-size this [512 512]))
 
   proj/Projection
   (project [this lat lng]
-    (proj/project (get-projection this) lat lng)))
+    (proj/project (:projection this proj/web-mercator) lat lng)))
+
+
+(def ^:private cartodb-light-url
+  "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}@2x.png")
+(def ^:private cartodb-dark-url
+  "https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}@2x.png")
+(def ^:private open-street-map-url
+  "http://{s}.tile.osm.org/{z}/{x}/{y}.png")
 
 (def cartodb-light
-  (->URLTileProvider "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"))
+  (->URLTileProvider cartodb-light-url))
 
 (def cartodb-dark
-  (->URLTileProvider "https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"))
-
-(def open-street-map
-  (->URLTileProvider "http://{s}.tile.osm.org/{z}/{x}/{y}.png"))
+  (->URLTileProvider cartodb-dark-url))
 
 (defonce providers (atom {}))
 (defn add-provider! [k provider]
@@ -55,9 +73,7 @@
 
 (add-provider! "cartodb-light" cartodb-light)
 (add-provider! "cartodb-dark" cartodb-dark)
-(add-provider! "open-street-map" open-street-map)
-(add-provider! "osm" open-street-map)
-
+(add-provider! "dummy" dummy-provider)
 
 (defn find-zoom-for-bounds
   [prj [sw-lat sw-lng] [ne-lat ne-lng] size]

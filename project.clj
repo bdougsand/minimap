@@ -1,5 +1,5 @@
 (defproject minimap "0.1.0-SNAPSHOT"
-  :description "Generate minimaps for "
+  :description "Generate raster minimaps from lat/lng coordinates"
   :url ""
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
