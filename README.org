@@ -17,4 +17,4 @@
 
    Copyright © 2017 Brian Sanders
 
-   Distributed under the MIT License.
+   Distributed under the Eclipse Public License.
