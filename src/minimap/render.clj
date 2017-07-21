@@ -80,9 +80,10 @@
                                    provider ne-lat sw-lng zoom)]
         (doto gfx
           (.setBackground (Color. 0 0 0 1))
-          (.clipRect (- img-lclip (* 512 img-left))
-                     (- img-tclip (* 512 img-top))
-                     (- img-rclip img-lclip) (- img-bclip img-tclip)))))
+          (.clipRect (- img-lclip (* 256 img-left))
+                     (- img-tclip (* 256 img-top))
+                     (* 2 (- img-rclip img-lclip))
+                     (* 2 (- img-bclip img-tclip))))))
     (doto gfx
       (do-draw-tiles tiles)
       (.dispose))
