@@ -49,7 +49,10 @@
 
   proj/Projection
   (project [this lat lng]
-    (proj/project (:projection this proj/web-mercator) lat lng)))
+    (proj/project (:projection this proj/web-mercator) lat lng))
+
+  (proj/pixel-scale [this lat lng zoom]
+    (proj/pixel-scale (:projection this proj/web-mercator) lat lng zoom)))
 
 
 (def ^:private cartodb-light-url

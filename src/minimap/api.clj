@@ -4,6 +4,7 @@
             [clojure.string :as str]))
 
 (s/def ::float-str #(re-matches #"-?\d+(\.\d+)" %))
+(s/def ::int-str #(re-matches #"\d+" %))
 
 (s/def ::tile-provider string?)
 (s/def ::lat (s/and ::float-str #(<= -90 (Float/parseFloat %) 90)))
@@ -12,14 +13,16 @@
 (s/def ::sw-lat ::lat)
 (s/def ::ne-lng ::lng)
 (s/def ::sw-lng ::lng)
+(s/def ::zoom ::int-str)
+(s/def ::circle ::int-str)
 
 (s/def ::map-request
   (s/keys :req-un [::tile-provider ::lat ::lng]
-          :opt-un [::zoom]))
+          :opt-un [::zoom ::circle]))
 
 (s/def ::bounds-request
   (s/keys :req-un [::tile-provider ::sw-lat ::sw-lng ::ne-lat ::ne-lng]
-          :opt-un [::clip]))
+          :opt-un [::clip ::circle]))
 
 
 (defn explain-pred [pred]

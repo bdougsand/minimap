@@ -7,11 +7,13 @@
   (* deg (/ Math/PI 180)))
 
 (defprotocol Projection
-  (project [this lat lng]))
+  (project [this lat lng])
+  (pixel-scale [this lat lng zoom] "meters per pixel"))
 
 
 ;; Web Mercator
-(def web-radius 6378137)
+(def web-radius 6372814)
+(def web-circumference (* 2 Math/PI web-radius))
 (def web-max-lat 85.0511287798)
 (def web-min-lat (- web-max-lat))
 (def web-mercator
@@ -20,10 +22,15 @@
       (let [lat (max (min lat web-max-lat) web-min-lat)
             ls (Math/sin (->radians lat))]
         [(* web-radius (->radians lng))
-         (* web-radius (Math/log (/ (+ 1 ls) (- 1 ls))) 0.5)]))))
+         (* web-radius (Math/log (/ (+ 1 ls) (- 1 ls))) 0.5)]))
+
+    (pixel-scale [this lat _lng zoom]
+      (/ (* web-circumference (Math/cos (Math/toRadians lat)))
+         (Math/pow 2 (+ zoom 9))))))
 
 (defn scale-crs [n]
   (* 256 (Math/pow 2 n)))
+
 
 (defn make-transform [a b c d]
   (fn transform

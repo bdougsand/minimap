@@ -5,7 +5,7 @@
             [ring.util.io :refer [piped-input-stream]]
 
             [minimap.api :as api :refer [defapi]]
-            [minimap.render :refer [make-image make-bounded-image]]
+            [minimap.render :as r :refer [make-image make-bounded-image]]
             [minimap.tile-providers :as tiles]
             [clojure.string :as str])
   (:import [javax.imageio ImageIO]))
@@ -20,25 +20,35 @@
             (ImageIO/write buf-img "png" out)))})
 
 
-; Handlers:
+(defn make-overlays [{:keys [circle lat lng]}]
+  (when circle
+    [(r/->Circle (some-> lat (Float/parseFloat))
+                 (some-> lat (Float/parseFloat))
+                 (Integer/parseInt circle))]))
+
+
+                                        ; Handlers:
 (defapi map-handler ::api/map-request
-  [{{:keys [tile-provider lat lng zoom] :or {zoom "18"}} :params}]
+  [{{:keys [tile-provider lat lng zoom] :or {zoom "18"} :as params} :params}]
   (if-let [prov (tiles/get-provider tile-provider)]
     (image-response
-     (make-image prov (Float/parseFloat lat) (Float/parseFloat lng) (Integer/parseInt zoom)))
+     (make-image prov (Float/parseFloat lat) (Float/parseFloat lng)
+                 (Integer/parseInt zoom)
+                 (make-overlays params)))
 
     {:status 400
      :body (str "Valid options for tile-provider are: " (str/join ", " (tiles/get-providers)))}))
 
 
 (defapi bounds-handler ::api/bounds-request
-  [{{:keys [clip tile-provider sw-lat sw-lng ne-lat ne-lng]} :params}]
+  [{{:keys [clip tile-provider sw-lat sw-lng ne-lat ne-lng] :as params} :params}]
   (if-let [prov (tiles/get-provider tile-provider)]
     (image-response
      (make-bounded-image prov
                          (Float/parseFloat sw-lat) (Float/parseFloat sw-lng)
                          (Float/parseFloat ne-lat) (Float/parseFloat ne-lng)
-                         clip))
+                         clip
+                         (make-overlays params)))
     {:status 400
      :body (str "Valid options for tile-provider are: " (str/join ", " (tiles/get-providers)))}))
 
@@ -52,4 +62,3 @@
   (-> #'handlers
       (wrap-keyword-params)
       (wrap-params)))
-

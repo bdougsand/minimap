@@ -9,6 +9,23 @@
            [java.awt Color RenderingHints]))
 
 
+(defn make-transform [prov clat clng zoom tile-scale tile-size output-size]
+  (let [[cx cy] (proj/lat-lng-to-point prov clat clng zoom)
+        d (/ tile-scale 2)
+        ctx (/ cx tile-size)
+        cty (/ cy tile-size)
+        min-tile-x (- ctx d)
+        min-tile-y (- cty d)]
+    (fn
+      ([lat lng]
+       (let [[x y] (proj/lat-lng-to-point prov lat lng zoom)]
+         [(* (- (/ x tile-size) min-tile-x) output-size )
+          (* (- (/ y tile-size) min-tile-y) output-size)]))
+      ([]
+       (let [c (/ output-size 2)]
+         [c c])))))
+
+
 (defn calculate-tiles [prov lat lng zoom tile-scale tile-size & [output-size]]
   (let [output-size (or output-size tile-size)
         [cx cy] (proj/lat-lng-to-point prov lat lng zoom)
@@ -55,16 +72,43 @@
     (when sub-img
       (.drawImage gfx sub-img nil px py))))
 
+(defprotocol Drawable
+  (draw [x gfx transform scale-m]))
 
-(defn make-image [provider lat lng zoom]
+(defrecord Circle [lat lng r]
+  Drawable
+  (draw [this gfx transform scale-m]
+    (let [[x y] (if (and lat lng) (transform lat lng) (transform))
+          scale (if (:pixel-scale this) identity (partial * (/ 1 scale-m)))
+          xr (scale (:xr this r))
+          yr (scale (:yr this r))]
+      (.drawOval gfx (- x xr) (- y yr) (* 2 xr) (* 2 yr)))))
+
+(defn do-draw-overlays [gfx transform scale-m overlays]
+  (doto gfx
+    (.setColor (Color. 60 124 61))
+    (.setStroke (java.awt.BasicStroke. 2)))
+  (doseq [overlay overlays]
+    (draw overlay gfx transform scale-m)))
+
+(defn draw-overlays [gfx prj lat lng zoom overlays]
+  (when overlays
+    (doto gfx (.setRenderingHint java.awt.RenderingHints/KEY_ANTIALIASING
+                                 java.awt.RenderingHints/VALUE_ANTIALIAS_ON)
+          (do-draw-overlays (make-transform prj lat lng zoom 1 256 512)
+                            (proj/pixel-scale prj lat lng zoom)
+                            overlays))))
+
+(defn make-image [provider lat lng zoom & [overlays]]
   (let [img (BufferedImage. 512 512 BufferedImage/TYPE_INT_ARGB)]
     (doto (.createGraphics img)
       (do-draw-tiles (calculate-tiles provider lat lng zoom 1 256 512))
+      (draw-overlays provider lat lng zoom overlays)
       (.dispose))
     img))
 
 
-(defn make-bounded-image [provider sw-lat sw-lng ne-lat ne-lng & [clip?]]
+(defn make-bounded-image [provider sw-lat sw-lng ne-lat ne-lng clip? & [overlays]]
   (let [zoom (tiles/find-zoom-for-bounds provider [sw-lat sw-lng] [ne-lat ne-lng] 256)
         c-lat (+ sw-lat (/ (- ne-lat sw-lat) 2))
         c-lng (+ sw-lng (/ (- ne-lng sw-lng) 2))
@@ -86,6 +130,7 @@
                      (* 2 (- img-bclip img-tclip))))))
     (doto gfx
       (do-draw-tiles tiles)
+      (draw-overlays provider c-lat c-lng zoom overlays)
       (.dispose))
     img))
 
@@ -93,4 +138,12 @@
 
 
 
+(comment
+  ; bounds?tile-provider=&sw-lat=&sw-lng=&ne-lat=&ne-lng=&clip=1
+  (javax.imageio.ImageIO/write
+   (make-bounded-image (tiles/get-provider "cartodb-light")
+                       42.37014943565453 -71.14634513854982 42.42079540736353 -71.06102943420412 true)
+   "png"
+   (io/file "resources/test.png"))
 
+  )
