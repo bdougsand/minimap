@@ -1,20 +1,34 @@
 * Minimap
 
-  A mini webservice for generating mini map images. Pulls tiles from a provider,
-  crops and combines them.
+  A webservice that generates 512x512 images by stitching together tiles from a
+  specified map provider. It exposes two endpoints. All params are query params:
+
+  - ~/~ :: Render a map centered on a coordinate
+    - ~tile-provider~ :: currently just ~cartodb-light~ or ~cartodb-dark~
+    - ~lat~, ~lng~ :: latitude and longitude
+    - ~zoom~ :: (optional) an integer 1-18, where 18 is the highest zoom level
+    - ~circle~ :: (optional) draw a circle of the specified radius (in meters),
+                  centered on the coordinate
+
+  - ~/bounds~ :: Render a map bounded by coordinates. Calculates an appropriate
+                 zoom level that will fully contain the bounds
+    - ~tile-provider~ :: as above
+    - ~sw-lat~, ~sw-lng~, ~ne-lat~, ~ne-lng~ :: coordinates specifying a bounding rectangle
+    - ~circle~ :: (optional) as above, w/circle centered on the center of the
+                  bounded region
+    - ~clip~ :: (optional) Since the tile providers serve raster tiles at
+                discrete zoom levels, the bounds will not usually fit precisely
+                in a 512x512 image. Specifying ~clip=1~ will make areas outside
+                the region transparent
 
 ** Usage
    Use ~lein run~ to start the web service. Use ~lein uberjar~ to generate a
    JAR. Run it behind a caching proxy.
 
 ** To Do
-*** Draw geometry
 *** Allow the dimensions of the output image to be specified
-*** Retina support
-*** Support more projections and tile providers
-
 ** License
 
-   Copyright © 2017 Brian Sanders
+   Copyright © 2018 Brian Sanders
 
    Distributed under the Eclipse Public License.

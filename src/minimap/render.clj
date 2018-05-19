@@ -116,7 +116,7 @@
         tiles (calculate-tiles provider c-lat c-lng zoom 1 256 512)
         gfx (.createGraphics img)]
     (when clip?
-      ;; Calculate the pixel coordinates of the bounds withinthe image
+      ;; Calculate the pixel coordinates of the bounds within the image
       (let [[_ img-left img-top] (ffirst tiles) ; tile coordinates
             [img-rclip img-bclip] (proj/lat-lng-to-point
                                    provider sw-lat ne-lng zoom)
