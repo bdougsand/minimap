@@ -22,19 +22,22 @@
 
 (defn make-overlays [{:keys [circle lat lng]}]
   (when circle
-    [(r/->Circle (some-> lat (Float/parseFloat))
-                 (some-> lat (Float/parseFloat))
-                 (Integer/parseInt circle))]))
-
+    (let [[r color] (str/split circle #",")]
+      [(r/map->Circle {:lat (some-> lat (Float/parseFloat))
+                       :lng (some-> lng (Float/parseFloat))
+                       :r (Integer/parseInt r)
+                       :color color})])))
 
                                         ; Handlers:
 (defapi map-handler ::api/map-request
   [{{:keys [tile-provider lat lng zoom] :or {zoom "18"} :as params} :params}]
   (if-let [prov (tiles/get-provider tile-provider)]
-    (image-response
-     (make-image prov (Float/parseFloat lat) (Float/parseFloat lng)
-                 (Integer/parseInt zoom)
-                 (make-overlays params)))
+    (let [lat (Float/parseFloat lat)
+          lng (Float/parseFloat lng)]
+      (image-response
+       (make-image prov lat lng
+                   (Integer/parseInt zoom)
+                   (make-overlays params))))
 
     {:status 400
      :body (str "Valid options for tile-provider are: " (str/join ", " (tiles/get-providers)))}))

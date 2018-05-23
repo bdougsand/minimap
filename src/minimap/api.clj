@@ -1,5 +1,5 @@
 (ns minimap.api
-  (:require [clojure.spec :as s]
+  (:require [clojure.spec.alpha :as s]
             [clojure.data.json :as json]
             [clojure.string :as str]))
 
@@ -14,7 +14,7 @@
 (s/def ::ne-lng ::lng)
 (s/def ::sw-lng ::lng)
 (s/def ::zoom ::int-str)
-(s/def ::circle ::int-str)
+(s/def ::circle #(re-matches #"\d+(,#?[a-z0-f]+)?" %))
 
 (s/def ::map-request
   (s/keys :req-un [::tile-provider ::lat ::lng]

@@ -74,6 +74,8 @@
 
 (defprotocol Drawable
   (draw [x gfx transform scale-m]))
+(defprotocol Styleable
+  (apply-style [x gfx]))
 
 (defrecord Circle [lat lng r]
   Drawable
@@ -84,11 +86,29 @@
           yr (scale (:yr this r))]
       (.drawOval gfx (- x xr) (- y yr) (* 2 xr) (* 2 yr)))))
 
+(defn as-color [x]
+  (cond (instance? Color x) x
+
+        (string? x) (try
+                      (if (str/starts-with? x "#")
+                        (Color/decode x)
+
+                        (.get (.getField Color x) Color))
+                      (catch NoSuchFieldException _ nil)
+                      (catch NumberFormatException _ nil))))
+
+(defn style [gfx x]
+  (if (satisfies? Styleable x)
+    (apply-style x gfx)
+
+    (.setColor gfx (or (some-> (:color x) (as-color))
+                       (Color. 60 124 61)))))
+
 (defn do-draw-overlays [gfx transform scale-m overlays]
   (doto gfx
-    (.setColor (Color. 60 124 61))
     (.setStroke (java.awt.BasicStroke. 2)))
   (doseq [overlay overlays]
+    (style gfx overlay)
     (draw overlay gfx transform scale-m)))
 
 (defn draw-overlays [gfx prj lat lng zoom overlays]

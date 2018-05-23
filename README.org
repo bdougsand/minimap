@@ -1,7 +1,10 @@
 * Minimap
 
   A webservice that generates 512x512 images by stitching together tiles from a
-  specified map provider. It exposes two endpoints. All params are query params:
+  specified map provider. [[http://github.com/codeforboston/cornerwise][Cornerwise]] uses it when sending emails to generate
+  preview images of a user's chosen subscription area.
+
+  It exposes two endpoints. All params are query params:
 
   - ~/~ :: Render a map centered on a coordinate
     - ~tile-provider~ :: currently just ~cartodb-light~ or ~cartodb-dark~
@@ -24,6 +27,9 @@
 ** Usage
    Use ~lein run~ to start the web service. Use ~lein uberjar~ to generate a
    JAR. Run it behind a caching proxy.
+
+** The Code
+   is a mess, yes. It's written in Clojure, though, so it's got that going for it.
 
 ** To Do
 *** Allow the dimensions of the output image to be specified
