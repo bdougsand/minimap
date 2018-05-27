@@ -3,7 +3,7 @@
             [clojure.data.json :as json]
             [clojure.string :as str]))
 
-(s/def ::float-str #(re-matches #"-?\d+(\.\d+)" %))
+(s/def ::float-str #(re-matches #"-?\d+(\.\d+)?" %))
 (s/def ::int-str #(re-matches #"\d+" %))
 
 (s/def ::tile-provider string?)
@@ -45,6 +45,38 @@
 
 (defn error-message [expl]
   (map explain-problem (::s/problems expl)))
+
+(def converter
+  {::float-str #(Float/parseFloat %)
+   ::int-str #(Integer/parseInt %)})
+
+(defn convert
+  ([arg spec converters]
+   (let [desc (s/describe spec)
+         conv (converters spec)]
+     (cond conv (conv arg)
+
+           (symbol? arg) arg
+
+           (#{'or 'and} (first desc))
+           (first (remove nil? (map #(try (convert arg % converters)
+                                          (catch Exception _ nil))
+                                    (rest desc))))
+
+           (= (first desc) 'keys)
+           (into {} (map (fn [[k kspec]]
+                           [k (some-> (get arg k)
+                                      (convert kspec converters))])
+
+                         (mapcat (fn [[ktype ks]]
+                                   (map vector
+                                        (if (#{:req-un :opt-un} ktype)
+                                          (map #(keyword (name %)) ks)
+                                          ks)
+                                        ks))
+                                 (partition 2 (rest desc))))))))
+  ([arg spec]
+   (convert arg spec converter)))
 
 (defn api-endpoint [spec f]
   (fn [{:keys [params] :as req}]
